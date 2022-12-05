@@ -23,7 +23,7 @@ void MainWindow::UpdateList() {
     QListWidgetItem* i;
     while (query.next()) {
     QString s = query.record().value(0).toString() + " " + query.record().value(1).toString() + " "  + query.record().value(2).toString() + " " +  query.record().value(5).toString() + " " + query.record().value(3).toString();
-    QListWidgetItem* i = new QListWidgetItem(s);
+    i = new QListWidgetItem(s);
     ui->listWidget->addItem(i);}
 }
 
@@ -33,11 +33,9 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setWindowIcon(QIcon("icoMain.png"));
     db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setHostName("127.0.0.1");
     db.setDatabaseName("data.db");
-    db.setUserName("root");
-    db.setPassword("1");
 
     if (!db.open()) {
         qDebug () << "db connection failed";
@@ -83,7 +81,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_pushButton_clicked()
 {
     this->searchw = new SearchWindow(this->db);
-    this->setWindowTitle("Поиск заметки");
+
     this->searchw->show();
     this->searchw->setAttribute(Qt::WA_DeleteOnClose);
     connect(searchw, SIGNAL(SearchSignal(int)), this, SLOT(SearchSlot(int)));
@@ -127,30 +125,49 @@ void MainWindow::on_pushButton_3_clicked()
         std::string str(ws.begin(), ws.end());
         note->author = QString::fromUtf8(str);
     }
-    if (note->tags.size() == 1) {
+    if (note->tags.size() == 1 || note->tags.size() == 0) {
         QMap<QString, int> most_used_words;
         auto splited_text = note->text.split(" ");
         for (int i=0; i<splited_text.size(); i++) {
-            if (splited_text[i].size() > 3)
+            if (splited_text[i].size() > 4)
             {
             most_used_words[splited_text[i]] = 0; }
         }
         for (int i=0; i<splited_text.size(); i++) {
-            if (splited_text[i].size() > 3)
+            if (splited_text[i].size() > 4)
             {
             most_used_words[splited_text[i]]++;
             }
         }
-        QString mx;
-        int mxvalue=0;
+        QString mx1, mx2, mx3;
+
+        int mxvalue1=0, mxvalue2=0, mxvalue3=0;
         for (int i=0; i<splited_text.size(); i++) {
-            if (most_used_words[splited_text[i]] > mxvalue)
+            if (most_used_words[splited_text[i]] > mxvalue1)
             {
-            mx = splited_text[i];
-            mxvalue = most_used_words[splited_text[i]];
+            mx3 = mx2;
+            mx2 = mx1;
+            mxvalue3 = mxvalue2;
+            mxvalue2 = mxvalue1;
+            mx1 = splited_text[i];
+            mxvalue1 = most_used_words[splited_text[i]];
+            }
+            else if (most_used_words[splited_text[i]] > mxvalue2) {
+                mx3 = mx2;
+                mxvalue3 = mxvalue2;
+                mx2 = splited_text[i];
+                mxvalue2 = most_used_words[splited_text[i]];
+            }
+            else if (most_used_words[splited_text[i]] > mxvalue3) {
+                mx3 = splited_text[i];
+                mxvalue3 = most_used_words[splited_text[i]];
             }
         }
-        note->tags.append(mx);
+        note->tags.append(mx1);
+        note->tags.append(" ");
+        note->tags.append(mx2);
+        note->tags.append(" ");
+        note->tags.append(mx3);
     }
     if (note->name == "") {
         note->name = note->text.split(" ")[0];

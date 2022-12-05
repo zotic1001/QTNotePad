@@ -7,6 +7,7 @@ SearchWindow::SearchWindow(QSqlDatabase& db, QWidget *parent) :
     ui(new Ui::SearchWindow)
 {
     ui->setupUi(this);
+    this->setWindowTitle("Поиск заметки");
     this->db = db;
 }
 
